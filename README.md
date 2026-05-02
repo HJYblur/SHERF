@@ -163,3 +163,30 @@ Distributed under the S-Lab License. See `LICENSE` for more information.
 This study is supported by the Ministry of Education, Singapore, under its MOE AcRF Tier 2 (MOE-T2EP20221-0012), NTU NAP, and under the RIE2020 Industry Alignment Fund – Industry Collaboration Projects (IAF-ICP) Funding Initiative, as well as cash and in-kind contribution from the industry partner(s).
 
 This project is built on source codes shared by [EG3D](https://github.com/NVlabs/eg3d), [MPS-NeRF](https://github.com/gaoxiangjun/MPS-NeRF) and [Neural Body](https://github.com/zju3dv/neuralbody).
+
+## Personal Note:
+The structure of RenderPeople Dataset:
+```
+RenderPeople_recon/20230228/
+    seq_000000-rp_aaron_rigged_001/
+    ├── cameras.json
+    ├── img/
+    │   ├── camera0000/
+    │   │   ├── 0000.jpg
+    │   │   ├── 0001.jpg
+    │   │   ├── ...
+    │   │   └── 0020.jpg
+    │   ├── camera0001/
+    │   ├── camera0002/
+    │   ├── ...
+    │   └── camera0035/
+    ├── mask/
+    │   ├── camera0000/
+    │   ├── camera0001/
+    │   ├── ...
+    │   ├── camera0035/
+    │   └── mask/
+    └── outputs_re_fitting/
+        └── refit_smpl_2nd.npz
+    └── cameras.json
+```

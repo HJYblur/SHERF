@@ -140,7 +140,7 @@ def sample_ray_RenderPeople_batch(img, msk, K, R, T, bounds, image_scaling, whit
 
 
 class RenderPeopleDatasetBatch(Dataset):
-    def __init__(self, data_root=None, split='test', multi_person=True, num_instance=450, poses_start=0, poses_interval=2, poses_num=10, image_scaling=1.0, white_back=False, sample_obs_view=True, fix_obs_view=False, resolution=None):
+    def __init__(self, data_root=None, split='test', multi_person=True, num_instance=450, poses_start=0, poses_interval=2, poses_num=10, image_scaling=1.0, white_back=False, sample_obs_view=True, fix_obs_view=False, resolution=None, camera_view_num=36):
         super(RenderPeopleDatasetBatch, self).__init__()
         self.data_root = data_root
         self.split = split
@@ -148,7 +148,7 @@ class RenderPeopleDatasetBatch(Dataset):
         self.white_back = white_back
         self.sample_obs_view = sample_obs_view
         self.fix_obs_view = fix_obs_view
-        self.camera_view_num = 36
+        self.camera_view_num = camera_view_num
 
         self.poses_start = poses_start # start index 0
         self.poses_interval = poses_interval # interval 1

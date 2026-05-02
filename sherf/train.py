@@ -216,6 +216,20 @@ def parse_comma_separated_list(s):
 
 @click.option('--test_flag',         help='test flag', metavar='BOOL',                 type=bool, default=False, show_default=True)
 
+# RenderPeople layout customization (also used for custom datasets in that layout).
+@click.option('--rp-camera-views',   help='Number of views (camera0000..); must match cameras.json', metavar='INT', type=int, default=36, show_default=True)
+@click.option('--rp-num-instance',   help='Training: number of subjects from human_list.txt', metavar='INT', type=int, default=450, show_default=True)
+@click.option('--rp-poses-num',       help='Number of pose indices used per subject', metavar='INT', type=int, default=10, show_default=True)
+@click.option('--rp-poses-interval', help='Stride between pose indices', metavar='INT', type=int, default=2, show_default=True)
+@click.option('--rp-eval-human-start', help='test: first line index in human_list.txt', metavar='INT', type=int, default=450, show_default=True)
+@click.option('--rp-eval-human-end', help='test: end line index (exclusive); use -1 for all remaining lines', metavar='INT', type=int, default=480, show_default=True)
+@click.option('--rp-eval-obs-views', help='test: comma-separated observation view ids', metavar='STR', type=str, default='0,16,31', show_default=True)
+@click.option('--rp-eval-nv-pose-start', help='test: novel-view pose_start', metavar='INT', type=int, default=0, show_default=True)
+@click.option('--rp-eval-np-pose-start', help='test: novel-pose reference pose index', metavar='INT', type=int, default=2, show_default=True)
+@click.option('--rp-eval-pose-interval', help='test: pose interval for eval dataset', metavar='INT', type=int, default=2, show_default=True)
+@click.option('--rp-eval-pose-num',   help='test: pose_num for eval DataLoader', metavar='INT', type=int, default=5, show_default=True)
+@click.option('--rp-eval-nv-data-interval', help='test: novel-view subsample (1=all eligible views)', metavar='INT', type=int, default=2, show_default=True)
+
 def main(**kwargs):
     """Train a GAN using the techniques described in the paper
     "Alias-Free Generative Adversarial Networks".
@@ -251,7 +265,7 @@ def main(**kwargs):
     
     # Training set.
     if opts.cfg == 'RenderPeople':
-        dataset_kwargs = dnnlib.EasyDict(class_name='training.RenderPeople_dataset.RenderPeopleDatasetBatch', data_root=opts.data, split='train', multi_person=True, num_instance=450, poses_start=0, poses_interval=2, poses_num=10, image_scaling=opts.neural_rendering_resolution_initial/512, white_back=opts.white_back, sample_obs_view=opts.sample_obs_view, fix_obs_view=opts.fix_obs_view)
+        dataset_kwargs = dnnlib.EasyDict(class_name='training.RenderPeople_dataset.RenderPeopleDatasetBatch', data_root=opts.data, split='train', multi_person=True, num_instance=opts.rp_num_instance, poses_start=0, poses_interval=opts.rp_poses_interval, poses_num=opts.rp_poses_num, image_scaling=opts.neural_rendering_resolution_initial/512, white_back=opts.white_back, sample_obs_view=opts.sample_obs_view, fix_obs_view=opts.fix_obs_view, camera_view_num=opts.rp_camera_views)
         c.training_set_kwargs = dataset_kwargs
         c.training_set_kwargs.resolution = 512
         dataset_name = opts.cfg
@@ -302,7 +316,21 @@ def main(**kwargs):
     c.use_sr_module = opts.use_sr_module
     c.cfg = opts.cfg
     c.test_flag = opts.test_flag
-    
+    c.rp_eval_kwargs = None
+    if opts.cfg == 'RenderPeople':
+        he = opts.rp_eval_human_end
+        if he is not None and he < 0:
+            he = None
+        c.rp_eval_kwargs = dnnlib.EasyDict(
+            human_slice=(opts.rp_eval_human_start, he),
+            obs_view_lst=[int(x.strip()) for x in opts.rp_eval_obs_views.split(',') if x.strip()],
+            nv_pose_start=opts.rp_eval_nv_pose_start,
+            np_pose_start=opts.rp_eval_np_pose_start,
+            pose_interval=opts.rp_eval_pose_interval,
+            pose_num=opts.rp_eval_pose_num,
+            novel_view_data_interval=opts.rp_eval_nv_data_interval,
+        )
+
     # Sanity checks.
     if c.batch_size % c.num_gpus != 0:
         raise click.ClickException('--batch must be a multiple of --gpus')

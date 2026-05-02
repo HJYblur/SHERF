@@ -158,6 +158,7 @@ def training_loop(
     use_sr_module           = True,
     cfg                     = 'THuman',
     test_flag               = False,
+    rp_eval_kwargs          = None,     # RenderPeople test() overrides (human_slice, obs views, ...).
 ):
     # Initialize.
     start_time = time.time()
@@ -328,7 +329,7 @@ def training_loop(
             # test_HuMMan(G, savedir=testsavedir, neural_rendering_resolution=loss_kwargs['neural_rendering_resolution_initial'], rank=0, use_sr_module=use_sr_module, white_back=False, sample_obs_view=training_set_kwargs.sample_obs_view, fix_obs_view=training_set_kwargs.fix_obs_view, smc_file=training_set_kwargs.data_root)
             # test_HuMMan(G, savedir=testsavedir, neural_rendering_resolution=loss_kwargs['neural_rendering_resolution_initial'], rank=0, use_sr_module=use_sr_module, white_back=False, sample_obs_view=training_set_kwargs.sample_obs_view, fix_obs_view=training_set_kwargs.fix_obs_view)
                 if cfg == 'RenderPeople':
-                    test(G, savedir=testsavedir, neural_rendering_resolution=loss_kwargs['neural_rendering_resolution_initial'], rank=0, use_sr_module=use_sr_module, white_back=False, sample_obs_view=training_set_kwargs.sample_obs_view, fix_obs_view=training_set_kwargs.fix_obs_view, dataset_name=cfg, data_root=training_set_kwargs.data_root, obs_view_lst=[0, 16, 31], nv_pose_start=0, np_pose_start=2, pose_interval=2, pose_num=5)
+                    test(G, savedir=testsavedir, neural_rendering_resolution=loss_kwargs['neural_rendering_resolution_initial'], rank=0, use_sr_module=use_sr_module, white_back=False, sample_obs_view=training_set_kwargs.sample_obs_view, fix_obs_view=training_set_kwargs.fix_obs_view, dataset_name=cfg, data_root=training_set_kwargs.data_root, rp_eval=rp_eval_kwargs)
                 elif cfg == 'THuman':
                     test(G, savedir=testsavedir, neural_rendering_resolution=loss_kwargs['neural_rendering_resolution_initial'], rank=0, use_sr_module=use_sr_module, white_back=False, sample_obs_view=training_set_kwargs.sample_obs_view, fix_obs_view=training_set_kwargs.fix_obs_view, dataset_name=cfg, data_root=training_set_kwargs.data_root, obs_view_lst=[4, 12, 20], nv_pose_start=0, np_pose_start=0, pose_interval=2, pose_num=5)       
                 elif cfg == 'HuMMan':

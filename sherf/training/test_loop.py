@@ -84,18 +84,34 @@ def ssim_metric(rgb_pred, rgb_gt, mask_at_box, H, W):
 
 #----------------------------------------------------------------------------
 
-def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_module=False, white_back=False, sample_obs_view=False, fix_obs_view=False, dataset_name='RenderPeople', data_root=None, obs_view_lst = [0, 16, 31], nv_pose_start=0, np_pose_start=2, pose_interval=0, pose_num=5):
+def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_module=False, white_back=False, sample_obs_view=False, fix_obs_view=False, dataset_name='RenderPeople', data_root=None, obs_view_lst = [0, 16, 31], nv_pose_start=0, np_pose_start=2, pose_interval=0, pose_num=5, rp_eval=None):
+    """rp_eval (EasyDict, optional): RenderPeople-only overrides — human_slice (start, end|None),
+    obs_view_lst, nv_pose_start, np_pose_start, pose_interval, pose_num, novel_view_data_interval.
+    If None, RenderPeople uses paper defaults (human lines [450:480], obs views [0,16,31], etc.)."""
 
     device = torch.device('cuda', rank)
     batch_size = 1
     humans_data_root = os.path.dirname(data_root)
 
+    rp_renderpeople = dnnlib.EasyDict(
+        human_slice=(450, 480),
+        obs_view_lst=[0, 16, 31],
+        nv_pose_start=0,
+        np_pose_start=2,
+        pose_interval=2,
+        pose_num=5,
+        novel_view_data_interval=2,
+    )
+    if dataset_name == 'RenderPeople' and rp_eval is not None:
+        rp_renderpeople.update(rp_eval)
+
     ## novel view synthesis evaluation with obs image from the same pose
-    pose_start = nv_pose_start # 0 
-    pose_interval = pose_interval
-    pose_num = pose_num
-    data_interval = 2
-    obs_view_lst = obs_view_lst #[0, 16, 31]
+    pose_start = rp_renderpeople.nv_pose_start if dataset_name == 'RenderPeople' else nv_pose_start
+    pose_interval = rp_renderpeople.pose_interval if dataset_name == 'RenderPeople' else pose_interval
+    pose_num = rp_renderpeople.pose_num if dataset_name == 'RenderPeople' else pose_num
+    data_interval = rp_renderpeople.novel_view_data_interval if dataset_name == 'RenderPeople' else 2
+    obs_view_lst = rp_renderpeople.obs_view_lst if dataset_name == 'RenderPeople' else obs_view_lst
+    np_pose_start = rp_renderpeople.np_pose_start if dataset_name == 'RenderPeople' else np_pose_start
 
     humans_list = os.path.join(humans_data_root, 'human_list.txt')
 
@@ -103,7 +119,11 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
         class_name = 'training.RenderPeople_dataset.RenderPeopleDatasetBatch'
         image_scaling=neural_rendering_resolution/512
         with open(humans_list) as f:
-            humans_name = f.readlines()[450:480]
+            lines = f.readlines()
+        h0, h1 = rp_renderpeople.human_slice
+        if h1 is None:
+            h1 = len(lines)
+        humans_name = lines[h0:h1]
     elif dataset_name == 'THuman':
         class_name = 'training.THuman_dataset.THumanDatasetBatch'
         image_scaling=neural_rendering_resolution/512

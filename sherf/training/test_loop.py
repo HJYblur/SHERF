@@ -249,6 +249,10 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
                     ssim_sub_view.append(ssim)
                     lpips_sub_view.append(lpips)
 
+            if not psnr_sub_view:
+                print(f"novel view subject: {human_name} obs_view: {obs_view} has no valid samples; skipping metrics")
+                continue
+
             avg_psnr = np.array(psnr_sub_view).mean()
             np.save(savedir_human+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(avg_psnr))
             avg_ssim = np.array(ssim_sub_view).mean()
@@ -261,15 +265,18 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
             total_lpips.append(lpips_sub_view)
 
         # psnr
-        avg_psnr = np.array(total_psnr).mean()
-        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
-        # ssim
-        avg_ssim = np.array(total_ssim).mean()
-        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
-        # lpips
-        avg_lpips = np.array(total_lpips).mean()
-        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
-        print("novel view synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
+        if total_psnr:
+            avg_psnr = np.array(total_psnr).mean()
+            # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
+            # ssim
+            avg_ssim = np.array(total_ssim).mean()
+            # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
+            # lpips
+            avg_lpips = np.array(total_lpips).mean()
+            # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
+            print("novel view synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
+        else:
+            print(f"novel view synthesis with obs view: {obs_view} has no valid samples; skipping summary metrics")
 
     # novel pose synthesis with obs image from the np_pose_start pose
     pose_start = np_pose_start # 2
@@ -354,6 +361,10 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
                     ssim_sub_view.append(ssim)
                     lpips_sub_view.append(lpips)
 
+            if not psnr_sub_view:
+                print(f"novel pose subject: {human_name} obs_view: {obs_view} has no valid samples; skipping metrics")
+                continue
+
             avg_psnr = np.array(psnr_sub_view).mean()
             np.save(savedir_human+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(avg_psnr))
             
@@ -368,13 +379,16 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
             total_lpips.append(lpips_sub_view)
 
         # psnr
-        avg_psnr = np.array(total_psnr).mean()
-        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
-        # ssim
-        avg_ssim = np.array(total_ssim).mean()
-        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
-        # lpips
-        avg_lpips = np.array(total_lpips).mean()
-        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
-        print("novel pose synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
+        if total_psnr:
+            avg_psnr = np.array(total_psnr).mean()
+            # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
+            # ssim
+            avg_ssim = np.array(total_ssim).mean()
+            # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
+            # lpips
+            avg_lpips = np.array(total_lpips).mean()
+            # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
+            print("novel pose synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
+        else:
+            print(f"novel pose synthesis with obs view: {obs_view} has no valid samples; skipping summary metrics")
     return

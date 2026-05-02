@@ -22,18 +22,18 @@ cd "$(dirname "$0")"
 
 # One subject path (must match a line in human_list.txt). Parent must contain human_list.txt.
 # Default assumes data lives next to the repo: ../RenderPeople_recon/20230228/<subject>
-export DATA_ROOT="${DATA_ROOT:-../RenderPeople_recon/20230228/seq_000001-thuman_0001}"
+export DATA_ROOT="${DATA_ROOT:-./data/RenderPeople_recon/20230228/seq_000001-thuman_0001}"
 export RESUME_PKL="${RESUME_PKL:-logs/training-RenderPeople-runs-450-subject-rs-512-1d-2d-3d-feature-NeRF-decoder-use-trans-sample-obs-view-gpu-4/SHERF_RenderPeople.pkl}"
 export OUTDIR="${OUTDIR:-logs/custom-eval-runs}"
 
 # How many subject lines in human_list.txt to use for this eval (from index START below).
-export RP_NUM_INSTANCE="${RP_NUM_INSTANCE:-4}"
+export RP_NUM_INSTANCE="${RP_NUM_INSTANCE:-100}"
 # Which lines in human_list.txt: [start, end). Use RP_EVAL_HUMAN_END=-1 for "until EOF".
 export RP_EVAL_HUMAN_START="${RP_EVAL_HUMAN_START:-0}"
-export RP_EVAL_HUMAN_END="${RP_EVAL_HUMAN_END:--1}"
+export RP_EVAL_HUMAN_END="${RP_EVAL_HUMAN_END:-100}"
 
 # Four fixed views (camera0000..camera0003). Match order to cameras.json.
-export RP_CAMERA_VIEWS="${RP_CAMERA_VIEWS:-4}"
+export RP_CAMERA_VIEWS=4
 # Single canonical pose index -> only img/.../0000.jpg needed per camera.
 export RP_POSES_NUM="${RP_POSES_NUM:-1}"
 export RP_POSES_INTERVAL="${RP_POSES_INTERVAL:-1}"
@@ -52,10 +52,10 @@ python -u train.py \
     --cfg=RenderPeople \
     --data="${DATA_ROOT}" \
     --gpus=1 \
-    --batch=4 \
+    --batch=1 \
     --gamma=5 \
     --aug=noaug \
-    --neural_rendering_resolution_initial=512 \
+    --neural_rendering_resolution_initial=256 \
     --gen_pose_cond=True \
     --gpc_reg_prob=0.8 \
     --kimg=1 \

@@ -3,9 +3,11 @@ from torch.utils.data import Dataset
 from PIL import Image
 import numpy as np
 import os
+import sys
 import imageio
 import cv2
 import random
+import re
 from smpl.smpl_numpy import SMPL
 # from cv2 import Rodrigues as rodrigues
 
@@ -139,6 +141,13 @@ def sample_ray_RenderPeople_batch(img, msk, K, R, T, bounds, image_scaling, whit
     return img, ray_o, ray_d, near, far, coord, mask_at_box, bkgd_msk
 
 
+def _ensure_numpy_core_pickle_compat():
+    if 'numpy._core' not in sys.modules:
+        sys.modules['numpy._core'] = np.core
+    if 'numpy._core.multiarray' not in sys.modules:
+        sys.modules['numpy._core.multiarray'] = np.core.multiarray
+
+
 class RenderPeopleDatasetBatch(Dataset):
     def __init__(self, data_root=None, split='test', multi_person=True, num_instance=450, poses_start=0, poses_interval=2, poses_num=10, image_scaling=1.0, white_back=False, sample_obs_view=True, fix_obs_view=False, resolution=None, camera_view_num=36):
         super(RenderPeopleDatasetBatch, self).__init__()
@@ -174,6 +183,21 @@ class RenderPeopleDatasetBatch(Dataset):
             camera = json.load(open(camera_file))
             self.cams_all.append(camera)
 
+        available_camera_counts = []
+        for camera in self.cams_all:
+            camera_ids = []
+            for camera_name in camera.keys():
+                match = re.fullmatch(r'camera(\d{4})', camera_name)
+                if match is not None:
+                    camera_ids.append(int(match.group(1)))
+            if camera_ids:
+                available_camera_counts.append(max(camera_ids) + 1)
+
+        if available_camera_counts:
+            self.camera_view_num = min(camera_view_num, min(available_camera_counts))
+        else:
+            self.camera_view_num = camera_view_num
+
         # prepare t pose and vertex
         self.smpl_model = SMPL(sex='neutral', model_dir='assets/SMPL_NEUTRAL_renderpeople.pkl')
         self.big_pose_params = self.big_pose_params()
@@ -193,6 +217,7 @@ class RenderPeopleDatasetBatch(Dataset):
         return msk
 
     def prepare_smpl_params(self, smpl_path, pose_index):
+        _ensure_numpy_core_pickle_compat()
         params_ori = dict(np.load(smpl_path, allow_pickle=True))['smpl'].item()
         params = {}
         params['shapes'] = np.array(params_ori['betas']).astype(np.float32)

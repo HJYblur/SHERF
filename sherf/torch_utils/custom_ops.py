@@ -58,6 +58,23 @@ def _get_mangled_gpu_name():
 
 _cached_plugins = dict()
 
+
+def _merge_build_flags(build_kwargs):
+    build_kwargs = dict(build_kwargs)
+    cxx_flags = list(build_kwargs.get('extra_cflags', []))
+    cuda_flags = list(build_kwargs.get('extra_cuda_cflags', []))
+
+    if '-std=c++17' not in cxx_flags:
+        cxx_flags.append('-std=c++17')
+    if '-std=c++17' not in cuda_flags:
+        cuda_flags.append('-std=c++17')
+    if '-DCCCL_IGNORE_DEPRECATED_CPP_DIALECT' not in cuda_flags:
+        cuda_flags.append('-DCCCL_IGNORE_DEPRECATED_CPP_DIALECT')
+
+    build_kwargs['extra_cflags'] = cxx_flags
+    build_kwargs['extra_cuda_cflags'] = cuda_flags
+    return build_kwargs
+
 def get_plugin(module_name, sources, headers=None, source_dir=None, **build_kwargs):
     assert verbosity in ['none', 'brief', 'full']
     if headers is None:
@@ -136,9 +153,9 @@ def get_plugin(module_name, sources, headers=None, source_dir=None, **build_kwar
             # Compile.
             cached_sources = [os.path.join(cached_build_dir, os.path.basename(fname)) for fname in sources]
             torch.utils.cpp_extension.load(name=module_name, build_directory=cached_build_dir,
-                verbose=verbose_build, sources=cached_sources, **build_kwargs)
+                verbose=verbose_build, sources=cached_sources, **_merge_build_flags(build_kwargs))
         else:
-            torch.utils.cpp_extension.load(name=module_name, verbose=verbose_build, sources=sources, **build_kwargs)
+            torch.utils.cpp_extension.load(name=module_name, verbose=verbose_build, sources=sources, **_merge_build_flags(build_kwargs))
 
         # Load.
         module = importlib.import_module(module_name)

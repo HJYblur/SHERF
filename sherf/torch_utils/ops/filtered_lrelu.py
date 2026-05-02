@@ -25,14 +25,18 @@ _plugin = None
 def _init():
     global _plugin
     if _plugin is None:
-        _plugin = custom_ops.get_plugin(
-            module_name='filtered_lrelu_plugin',
-            sources=['filtered_lrelu.cpp', 'filtered_lrelu_wr.cu', 'filtered_lrelu_rd.cu', 'filtered_lrelu_ns.cu'],
-            headers=['filtered_lrelu.h', 'filtered_lrelu.cu'],
-            source_dir=os.path.dirname(__file__),
-            extra_cuda_cflags=['--use_fast_math'],
-        )
-    return True
+        try:
+            _plugin = custom_ops.get_plugin(
+                module_name='filtered_lrelu_plugin',
+                sources=['filtered_lrelu.cpp', 'filtered_lrelu_wr.cu', 'filtered_lrelu_rd.cu', 'filtered_lrelu_ns.cu'],
+                headers=['filtered_lrelu.h', 'filtered_lrelu.cu'],
+                source_dir=os.path.dirname(__file__),
+                extra_cuda_cflags=['--use_fast_math'],
+            )
+        except Exception as err:
+            warnings.warn(f'Failed to build filtered_lrelu_plugin, falling back to ref implementation: {err}')
+            _plugin = False
+    return _plugin is not False
 
 def _get_filter_size(f):
     if f is None:
@@ -55,7 +59,7 @@ def _parse_padding(padding):
 
 #----------------------------------------------------------------------------
 
-def filtered_lrelu(x, fu=None, fd=None, b=None, up=1, down=1, padding=0, gain=np.sqrt(2), slope=0.2, clamp=None, flip_filter=False, impl='cuda'):
+def filtered_lrelu(x, fu=None, fd=None, b=None, up=1, down=1, padding=0, gain=np.sqrt(2), slope=0.2, clamp=None, flip_filter=False, impl='ref'):
     r"""Filtered leaky ReLU for a batch of 2D images.
 
     Performs the following sequence of operations for each channel:
@@ -144,10 +148,10 @@ def _filtered_lrelu_ref(x, fu=None, fd=None, b=None, up=1, down=1, padding=0, ga
     out_h = (in_h * up + (py0 + py1) - (fu_h - 1) - (fd_h - 1) + (down - 1)) // down
 
     # Compute using existing ops.
-    x = bias_act.bias_act(x=x, b=b) # Apply bias.
-    x = upfirdn2d.upfirdn2d(x=x, f=fu, up=up, padding=[px0, px1, py0, py1], gain=up**2, flip_filter=flip_filter) # Upsample.
-    x = bias_act.bias_act(x=x, act='lrelu', alpha=slope, gain=gain, clamp=clamp) # Bias, leaky ReLU, clamp.
-    x = upfirdn2d.upfirdn2d(x=x, f=fd, down=down, flip_filter=flip_filter) # Downsample.
+    x = bias_act.bias_act(x=x, b=b, impl='ref') # Apply bias.
+    x = upfirdn2d.upfirdn2d(x=x, f=fu, up=up, padding=[px0, px1, py0, py1], gain=up**2, flip_filter=flip_filter, impl='ref') # Upsample.
+    x = bias_act.bias_act(x=x, act='lrelu', alpha=slope, gain=gain, clamp=clamp, impl='ref') # Bias, leaky ReLU, clamp.
+    x = upfirdn2d.upfirdn2d(x=x, f=fd, down=down, flip_filter=flip_filter, impl='ref') # Downsample.
 
     # Check output shape & dtype.
     misc.assert_shape(x, [batch_size, channels, out_h, out_w])

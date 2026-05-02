@@ -242,13 +242,14 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
 
         # psnr
         avg_psnr = np.array(total_psnr).mean()
-        np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
+        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
         # ssim
         avg_ssim = np.array(total_ssim).mean()
-        np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
+        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
         # lpips
         avg_lpips = np.array(total_lpips).mean()
-        np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
+        # np.save(savedir+'/novel_view/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
+        print("novel view synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
 
     # novel pose synthesis with obs image from the np_pose_start pose
     pose_start = np_pose_start # 2
@@ -348,12 +349,12 @@ def test(model, savedir=None, neural_rendering_resolution=128, rank=0, use_sr_mo
 
         # psnr
         avg_psnr = np.array(total_psnr).mean()
-        np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
+        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/psnr_{}.npy'.format(int(avg_psnr*100)), np.array(total_psnr))
         # ssim
         avg_ssim = np.array(total_ssim).mean()
-        np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
+        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/ssim_{}.npy'.format(int(avg_ssim*100)), np.array(total_ssim))
         # lpips
         avg_lpips = np.array(total_lpips).mean()
-        np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
-
+        # np.save(savedir+'/novel_pose/'+f'obs_view_{obs_view}'+'/lpips_{}.npy'.format(int(avg_lpips*100)), np.array(total_lpips))
+        print("novel pose synthesis with obs view: ", obs_view, " avg psnr: ", round(avg_psnr, 3), " avg ssim: ", round(avg_ssim, 3), " avg lpips: ", round(avg_lpips, 3))
     return

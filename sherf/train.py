@@ -94,6 +94,14 @@ def launch_training(c, desc, outdir, dry_run):
         json.dump(c, f, indent=2)
 
     # Launch processes.
+    # Ensure we don't launch more processes than available CUDA devices.
+    available_cuda = torch.cuda.device_count()
+    if available_cuda == 0:
+        raise RuntimeError('No CUDA devices available. Set CUDA_VISIBLE_DEVICES or install CUDA.')
+    if c.num_gpus > available_cuda:
+        print(f'Warning: requested {c.num_gpus} GPUs but only {available_cuda} available; reducing to {available_cuda}.')
+        c.num_gpus = available_cuda
+
     print('Launching processes...')
     torch.multiprocessing.set_start_method('spawn')
     with tempfile.TemporaryDirectory() as temp_dir:

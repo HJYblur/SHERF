@@ -161,8 +161,18 @@ def training_loop(
 ):
     # Initialize.
     start_time = time.time()
-    torch.cuda.set_device(rank)
-    device = torch.device('cuda', rank)
+    # Map requested rank to an available CUDA device to avoid "invalid device ordinal".
+    available_cuda = torch.cuda.device_count()
+    if available_cuda == 0:
+        raise RuntimeError('No CUDA devices available. Set CUDA_VISIBLE_DEVICES or install CUDA.')
+    if rank >= available_cuda:
+        mapped_rank = rank % available_cuda
+        if rank == 0:
+            print(f'Warning: requested rank {rank} >= available CUDA devices ({available_cuda}), mapping to device {mapped_rank}.')
+    else:
+        mapped_rank = rank
+    torch.cuda.set_device(mapped_rank)
+    device = torch.device('cuda', mapped_rank)
     np.random.seed(random_seed * num_gpus + rank)
     torch.manual_seed(random_seed * num_gpus + rank)
     torch.backends.cudnn.benchmark = cudnn_benchmark    # Improves training speed.

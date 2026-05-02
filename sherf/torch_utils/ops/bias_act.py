@@ -14,6 +14,7 @@ import os
 import numpy as np
 import torch
 import dnnlib
+import warnings
 
 from .. import custom_ops
 from .. import misc
@@ -40,18 +41,22 @@ _null_tensor = torch.empty([0])
 def _init():
     global _plugin
     if _plugin is None:
-        _plugin = custom_ops.get_plugin(
-            module_name='bias_act_plugin',
-            sources=['bias_act.cpp', 'bias_act.cu'],
-            headers=['bias_act.h'],
-            source_dir=os.path.dirname(__file__),
-            extra_cuda_cflags=['--use_fast_math'],
-        )
-    return True
+        try:
+            _plugin = custom_ops.get_plugin(
+                module_name='bias_act_plugin',
+                sources=['bias_act.cpp', 'bias_act.cu'],
+                headers=['bias_act.h'],
+                source_dir=os.path.dirname(__file__),
+                extra_cuda_cflags=['--use_fast_math'],
+            )
+        except Exception as err:
+            warnings.warn(f'Failed to build bias_act_plugin, falling back to ref implementation: {err}')
+            _plugin = False
+    return _plugin is not False
 
 #----------------------------------------------------------------------------
 
-def bias_act(x, b=None, dim=1, act='linear', alpha=None, gain=None, clamp=None, impl='cuda'):
+def bias_act(x, b=None, dim=1, act='linear', alpha=None, gain=None, clamp=None, impl='ref'):
     r"""Fused bias and activation function.
 
     Adds bias `b` to activation tensor `x`, evaluates activation function `act`,
